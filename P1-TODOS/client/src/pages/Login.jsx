@@ -1,14 +1,34 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import UserContext from "../context/UserContext";
+import fetchUser from "../utils/fetchUser";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Login({setIsAuthenticated}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const {setUid} = useContext(UserContext)
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log("Login attempt:", { email, password });
+        
+        try {
+            const data = await fetchUser(email);
+
+            if (data && data._id) {
+                setUid(data._id);
+                setIsAuthenticated(true);
+                navigate("/");
+            } else {
+                console.log("Login failed: Invalid user data or user not found");
+                alert("Invalid email or user not found");
+            }
+        } catch (error) {
+            console.log("Error Login", error);
+            alert("Login failed. Please try again.");
+        }
     };
 
     return(

@@ -1,35 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
+import fetchTask from "../utils/fetchTask";
+import UserContext from "../context/UserContext";
+import postTask from "../utils/postTask";
+import putToggle from "../utils/handleToggle";
+import deleteTaskAPI from "../utils/deleteTask";
 
 function Home() {
     const [ input, setInput ] = useState("");
-    const [tasks, setTasks] = useState([
-        { id: 1, text: "Complete project documentation", completed: false },
-        { id: 2, text: "Review code changes", completed: true },
-        { id: 3, text: "Update dependencies", completed: false },
-        { id: 4, text: "Fix UI bugs", completed: false }
-    ]);
+    const {uid} = useContext(UserContext);
+    const [tasks, setTasks] = useState([]);
+    const hasFetched = useRef(false);
 
-    const handleSubmit = () => {
+    useEffect(() => {
+        console.log("User ID", uid)
+        if (hasFetched.current) return; // Prevent multiple calls
+        
+        hasFetched.current = true;
+        fetchTask(uid)
+            .then(data => {
+                console.log("Fetched data:", data);
+                console.log("Is array:", Array.isArray(data));
+                
+                if (Array.isArray(data)) {
+                    setTasks(data);
+                } else {
+                    console.warn("API returned non-array data:", data);
+                    setTasks([]);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching tasks:", error);
+                setTasks([]);
+            });
+    })
+
+    const handleSubmit = async () => {
         if (input.trim() === "") return;
         
         const newTask = {
-            id: Date.now(),
-            text: input.trim(),
-            completed: false
+            uid: uid,
+            description: input.trim()
         };
         
-        setTasks([...tasks, newTask]);
-        setInput("");
+        try {
+            const createdTask = await postTask(newTask);
+            setTasks([...tasks, createdTask]);
+            setInput("");
+        } catch (error) {
+            console.log("Failed to create task:", error);
+        }
     }
 
-    const toggleTask = (id) => {
+    const toggleTask = async (id) => {
+        const taskId = { _id : id}
+        await putToggle(taskId);
         setTasks(tasks.map(task => 
-            task.id === id ? { ...task, completed: !task.completed } : task
+            (task._id || task.id) === id ? { ...task, completed: !task.completed } : task
         ));
     }
-
-    const deleteTask = (id) => {
-        setTasks(tasks.filter(task => task.id !== id));
+    
+    const deleteTask = async (id) => { 
+        try {
+            const taskId = { _id : id}
+            await deleteTaskAPI(taskId);
+            setTasks(tasks.filter(task => (task._id) !== id));
+        } catch (error) {
+            console.log("Failed to delete task:", error);
+        }
     }
 
     return(
@@ -67,14 +104,14 @@ function Home() {
                         <div className="grid gap-4">
                             {tasks.map(task => (
                                 <div 
-                                    key={task.id} 
+                                    key={task._id} 
                                     className="bg-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-200 border border-gray-100"
                                 >
                                     <div className="flex items-center gap-4">
                                         <input 
                                             type="checkbox" 
                                             checked={task.completed}
-                                            onChange={() => toggleTask(task.id)}
+                                            onChange={() => toggleTask(task._id)}
                                             className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                         />
                                         <span 
@@ -84,7 +121,7 @@ function Home() {
                                                     : 'font-medium'
                                             }`}
                                         >
-                                            {task.text}
+                                            {task.description || task.text}
                                         </span>
                                         <div className="flex gap-2">
                                             <button 
@@ -98,7 +135,7 @@ function Home() {
                                             </button>
                                             <button 
                                                 className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200"
-                                                onClick={() => deleteTask(task.id)}
+                                                onClick={() => deleteTask(task._id)}
                                                 title="Delete task"
                                                 aria-label="Delete task"
                                             >

@@ -3,10 +3,12 @@ const app = express();
 const userRoutes = require('./route/user.route.js');
 const taskRoutes = require('./route/task.route.js');
 const connectDB = require('./db/connect.db.js');
+const cors = require('cors')
 
 const startServer = async () => {
   try {
     await connectDB();
+    app.use(cors())
     app.use(express.json());
     app.use("/user", userRoutes);
     app.use("/task", taskRoutes);
