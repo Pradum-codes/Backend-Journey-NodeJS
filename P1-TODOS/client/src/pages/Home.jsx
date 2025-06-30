@@ -1,15 +1,23 @@
 import { useState, useEffect, useRef, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import fetchTask from "../utils/fetchTask";
 import UserContext from "../context/UserContext";
 import postTask from "../utils/postTask";
 import putToggle from "../utils/handleToggle";
 import deleteTaskAPI from "../utils/deleteTask";
 
-function Home() {
+function Home({ setIsAuthenticated }) {
     const [ input, setInput ] = useState("");
-    const {uid} = useContext(UserContext);
+    const {uid, user, clearUser} = useContext(UserContext);
     const [tasks, setTasks] = useState([]);
     const hasFetched = useRef(false);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        clearUser(); // Clear user context and localStorage
+        setIsAuthenticated(false); // Update App component state
+        navigate('/login');
+    };
 
     useEffect(() => {
         console.log("User ID", uid)
@@ -32,7 +40,7 @@ function Home() {
                 console.error("Error fetching tasks:", error);
                 setTasks([]);
             });
-    })
+    }, [uid])
 
     const handleSubmit = async () => {
         if (input.trim() === "") return;
@@ -72,6 +80,34 @@ function Home() {
     return(
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
             <div className="max-w-2xl mx-auto">
+                {/* User Header */}
+                <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <span className="text-white font-semibold">
+                                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                </span>
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-800">
+                                    Welcome, {user?.name || 'User'}!
+                                </p>
+                                <p className="text-sm text-gray-600">{user?.email}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 flex items-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold text-gray-800 mb-2">My Todo List</h1>

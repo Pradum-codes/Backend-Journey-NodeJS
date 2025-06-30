@@ -2,6 +2,12 @@ const Task = require('../model/task.model');
 
 const getTasksForUser = async (req, res) => {
     const userId = req.query.uid;
+    
+    // Validate that userId is provided
+    if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+    }
+    
     try {
         const tasks = await Task.find({ uid: userId });
         res.json(tasks);
@@ -14,7 +20,16 @@ const getTasksForUser = async (req, res) => {
 const createTaskForUser = async (req, res) => {
   try {
         const { uid, description } = req.body;
-        const task = new Task({ uid, description });
+        
+        // Validate required fields
+        if (!uid) {
+            return res.status(400).json({ error: "User ID is required" });
+        }
+        if (!description || description.trim() === '') {
+            return res.status(400).json({ error: "Task description is required" });
+        }
+        
+        const task = new Task({ uid, description: description.trim() });
         await task.save();
         res.status(201).json(task);
     } catch (err) {

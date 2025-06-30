@@ -1,7 +1,6 @@
-
-const fetchUser = async (payload) => {
+const registerUser = async (payload) => {
     try {
-        const response = await fetch(`http://localhost:3000/user/login`, {
+        const response = await fetch(`http://localhost:3000/user/create`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -10,17 +9,17 @@ const fetchUser = async (payload) => {
         });
         
         const data = await response.json();
-        console.log("Login response:", data);
+        console.log("Registration response:", data);
         
         if (!response.ok) {
-            throw new Error(data.error || 'Login failed');
+            throw new Error(data.error || 'Registration failed');
         }
         
         return data;
     } catch (error) {
-        console.log("Login error:", error);
+        console.log("Registration error:", error);
         throw error;
     }
 }
 
-export default fetchUser
+export default registerUser;

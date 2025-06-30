@@ -15,9 +15,9 @@ const putToggle = async (data) => {
 
         const result = await response.json();
         console.log("Success:", result);
-        return result; // Return the created task with _id
+        return result; // Return the updated task
     } catch (error) {
-        console.error("Error puttingdata:", error);
+        console.error("Error updating task:", error);
         throw error; // Re-throw so calling code can handle it
     }
 }

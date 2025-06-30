@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import UserContext from "../context/UserContext";
 import fetchUser from "../utils/fetchUser";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login({setIsAuthenticated}) {
     const [email, setEmail] = useState("");
@@ -9,25 +9,34 @@ function Login({setIsAuthenticated}) {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
-    const {setUid} = useContext(UserContext)
+    const {setUser} = useContext(UserContext)
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
         try {
-            const data = await fetchUser(email);
+            const payload = {
+                email: email,
+                password: password
+            }
+            const data = await fetchUser(payload);
 
-            if (data && data._id) {
-                setUid(data._id);
+            // Check if login was successful
+            if (data && data.user && data.user.id) {
+                // Store user data in context and localStorage
+                setUser(data.user);
                 setIsAuthenticated(true);
+                console.log("Login successful:", data.message);
                 navigate("/");
             } else {
-                console.log("Login failed: Invalid user data or user not found");
-                alert("Invalid email or user not found");
+                console.log("Login failed: Invalid response structure");
+                alert("Login failed. Please check your credentials.");
             }
         } catch (error) {
             console.log("Error Login", error);
-            alert("Login failed. Please try again.");
+            // Show more specific error message
+            const errorMessage = error.message || "Login failed. Please try again.";
+            alert(errorMessage);
         }
     };
 
@@ -177,9 +186,9 @@ function Login({setIsAuthenticated}) {
                 <div className="text-center">
                     <p className="text-sm text-gray-600">
                         Don't have an account?{' '}
-                        <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+                        <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
                             Sign up now
-                        </a>
+                        </Link>
                     </p>
                 </div>
             </div>

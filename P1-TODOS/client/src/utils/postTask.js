@@ -17,7 +17,7 @@ const postTask = async (data) => {
         console.log("Success:", result);
         return result; // Return the created task with _id
     } catch (error) {
-        console.error("Error posting data:", error);
+        console.error("Error posting task:", error);
         throw error; // Re-throw so calling code can handle it
     }
 }
