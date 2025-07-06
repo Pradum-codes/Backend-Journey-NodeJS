@@ -7,6 +7,7 @@ const isAuthenticated = () => {
 // Function to logout user
 const logout = () => {
     localStorage.removeItem('userData');
+    localStorage.removeItem('token');
 };
 
 export { isAuthenticated, logout };

@@ -1,4 +1,6 @@
 const User = require('../model/user.model');
+const jwt = require('jsonwebtoken');
+const generateToken = require('../utils/generateToken')
 
 const getUsers = async (req, res) => {
     const email = req.query.email;
@@ -22,6 +24,7 @@ const createUser = async (req, res) => {
         }
         
         const user = new User({ name, email, password });
+        const token = generateToken(user._id);
         await user.save();
         
         // Don't send password in response
@@ -30,7 +33,8 @@ const createUser = async (req, res) => {
         
         res.status(201).json({ 
             message: 'User created successfully',
-            user: userResponse 
+            user: userResponse,
+            token: token, 
         });
     } catch (err) {
         if (err.name === 'ValidationError') {
@@ -55,7 +59,7 @@ const loginUser = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
-        
+        const token = generateToken(user._id);
         // Return user info without password
         res.json({
             message: 'Login successful',
@@ -63,9 +67,11 @@ const loginUser = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email
-            }
+            },
+            token: token,
         });
     } catch (error) {
+        console.log("Login Error: ", error);
         res.status(500).json({ error: 'Login failed' });
     }
 };

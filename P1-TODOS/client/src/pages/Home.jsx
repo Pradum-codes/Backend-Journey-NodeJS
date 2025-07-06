@@ -20,27 +20,35 @@ function Home({ setIsAuthenticated }) {
     };
 
     useEffect(() => {
-        console.log("User ID", uid)
-        if (hasFetched.current) return; // Prevent multiple calls
-        
+        console.log("Inside Home useEffect, uid =", uid);
+        if (!uid || hasFetched.current) return;
+
         hasFetched.current = true;
-        fetchTask(uid)
+        const token = localStorage.getItem('token');
+
+        fetchTask(uid, token)
             .then(data => {
-                console.log("Fetched data:", data);
-                console.log("Is array:", Array.isArray(data));
-                
                 if (Array.isArray(data)) {
                     setTasks(data);
                 } else {
-                    console.warn("API returned non-array data:", data);
                     setTasks([]);
+                    console.warn("Unexpected task data format:", data);
                 }
             })
-            .catch(error => {
-                console.error("Error fetching tasks:", error);
-                setTasks([]);
+            .catch(err => {
+                console.error("Error fetching tasks:", err);
+                if (err.status === 401) {
+                    // Token is invalid or expired, redirect to login
+                    console.log("Invalid token, redirecting to login");
+                    clearUser(); // Clear user context and localStorage
+                    setIsAuthenticated(false); // Update App component state
+                    navigate('/login');
+                } else {
+                    setTasks([]);
+                }
             });
-    }, [uid])
+    }, [uid, clearUser, navigate, setIsAuthenticated]);
+
 
     const handleSubmit = async () => {
         if (input.trim() === "") return;
@@ -56,15 +64,33 @@ function Home({ setIsAuthenticated }) {
             setInput("");
         } catch (error) {
             console.log("Failed to create task:", error);
+            if (error.status === 401) {
+                // Token is invalid or expired, redirect to login
+                console.log("Invalid token, redirecting to login");
+                clearUser();
+                setIsAuthenticated(false);
+                navigate('/login');
+            }
         }
     }
 
     const toggleTask = async (id) => {
-        const taskId = { _id : id}
-        await putToggle(taskId);
-        setTasks(tasks.map(task => 
-            (task._id || task.id) === id ? { ...task, completed: !task.completed } : task
-        ));
+        try {
+            const taskId = { _id : id}
+            await putToggle(taskId);
+            setTasks(tasks.map(task => 
+                (task._id || task.id) === id ? { ...task, completed: !task.completed } : task
+            ));
+        } catch (error) {
+            console.log("Failed to toggle task:", error);
+            if (error.status === 401) {
+                // Token is invalid or expired, redirect to login
+                console.log("Invalid token, redirecting to login");
+                clearUser();
+                setIsAuthenticated(false);
+                navigate('/login');
+            }
+        }
     }
     
     const deleteTask = async (id) => { 
@@ -74,6 +100,13 @@ function Home({ setIsAuthenticated }) {
             setTasks(tasks.filter(task => (task._id) !== id));
         } catch (error) {
             console.log("Failed to delete task:", error);
+            if (error.status === 401) {
+                // Token is invalid or expired, redirect to login
+                console.log("Invalid token, redirecting to login");
+                clearUser();
+                setIsAuthenticated(false);
+                navigate('/login');
+            }
         }
     }
 
@@ -126,7 +159,7 @@ function Home({ setIsAuthenticated }) {
                         />
                         <button 
                             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                            onClick={handleSubmit}
+                            onClick={   handleSubmit}
                         >
                             Add Task
                         </button>

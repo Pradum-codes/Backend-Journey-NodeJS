@@ -8,13 +8,17 @@ const UserContextProvider = ({children}) => {
 
     // Load user data from localStorage on component mount
     useEffect(() => {
-        const savedUser = localStorage.getItem('userData');
-        if (savedUser) {
-            const userData = JSON.parse(savedUser);
-            setUser(userData);
-            setUid(userData.id);
-        }
+    const savedUser = localStorage.getItem('userData');
+    console.log("Loaded from storage:", savedUser);
+    
+    if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        console.log("Parsed user data:", userData);
+        setUser(userData);
+        setUid(userData._id || userData.id); // or userData._id
+    }
     }, []);
+
 
     // Update localStorage when user data changes
     const updateUser = (userData) => {

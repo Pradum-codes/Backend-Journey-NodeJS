@@ -69,6 +69,7 @@ function Signup({ setIsAuthenticated }) {
                 setUser(data.user);
                 setIsAuthenticated(true);
                 console.log("SignIn successful:", data.message);
+                localStorage.setItem('token', data.token);
                 navigate("/");
             } else {
                 console.log("Registration failed: Invalid response structure");

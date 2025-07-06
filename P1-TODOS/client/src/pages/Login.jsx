@@ -27,6 +27,7 @@ function Login({setIsAuthenticated}) {
                 setUser(data.user);
                 setIsAuthenticated(true);
                 console.log("Login successful:", data.message);
+                localStorage.setItem('token', data.token);
                 navigate("/");
             } else {
                 console.log("Login failed: Invalid response structure");
