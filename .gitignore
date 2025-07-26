@@ -1,2 +1,5 @@
 /mongoose/node_modules
 /mongoose/.env
+
+*node_modules
+*.env
